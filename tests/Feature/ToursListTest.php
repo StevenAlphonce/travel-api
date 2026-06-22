@@ -116,7 +116,7 @@ class ToursListTest extends TestCase
             'price' => 100,
         ]);
 
-        $response = $this->getJson('/api/v1/travels/foo-bar/tours?sortBy=price&sortDirection=asc');
+        $response = $this->getJson('/api/v1/travels/foo-bar/tours?sortBy=price&sortOrder=asc');
 
         $response->assertStatus(200);
         $response->assertJsonPath('data.0.name', 'Low price earlier');
@@ -149,7 +149,7 @@ class ToursListTest extends TestCase
             'price' => 300,
         ]);
 
-        $response = $this->getJson('/api/v1/travels/foo-bar/tours?sortBy=price&sortDirection=desc');
+        $response = $this->getJson('/api/v1/travels/foo-bar/tours?sortBy=price&sortOrder=desc');
 
         $response->assertStatus(200);
         $response->assertJsonPath('data.0.name', 'High price earlier');

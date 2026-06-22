@@ -3,40 +3,35 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+//use App\Http\Requests\TourRequest;
+use App\Http\Requests\ToursListRequest;
 use App\Http\Resources\TourResource;
 use App\Models\Travel;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+
 
 class TourController extends Controller
 {
-    public function index(Request $request, Travel $travel)
+    public function index(ToursListRequest $request, Travel $travel)
     {
-        $tours = $travel->tours()
-            ->when($request->filled('priceFrom'), function ($query) use ($request) {
-                $query->where('price', '>=', $this->priceToCents($request->input('priceFrom')));
-            })
-            ->when($request->filled('priceTo'), function ($query) use ($request) {
-                $query->where('price', '<=', $this->priceToCents($request->input('priceTo')));
-            })
-            ->when($request->filled('dateFrom'), function ($query) use ($request) {
-                $query->where('start_date', '>=', $request->input('dateFrom'));
-            })
-            ->when($request->filled('dateTo'), function ($query) use ($request) {
-                $query->where('start_date', '<=', $request->input('dateTo'));
-            });
 
-        if ($request->input('sortBy') === 'price') {
-            $tours->orderBy('price', $request->input('sortDirection') === 'desc' ? 'desc' : 'asc');
-        }
+        $tours = $travel->tours()->when($request->priceFrom,function($query)use ($request){
+           $query->where('price','>=',$request->priceFrom * 100);
+        })
+            ->when($request->priceTo,function($query)use ($request){
+            $query->where('price','<=',$request->priceTo * 100);
+            })->when($request->dateFrom,function($query)use ($request){
+                $query->where('start_date','>=',$request->dateFrom);
+            })->when($request->dateTo,function($query)use ($request){
+                $query->where('ending_date','<=',$request->dateTo);
+            })->when($request->sortBy && $request->sortOrder,function($query)use ($request){
 
-        $tours = $tours->orderBy('start_date')->paginate(10);
+                $query->orderBy($request->sortBy,$request->sortOrder);
+
+            })->orderBy('start_date')->paginate(10);
 
         return TourResource::collection($tours);
-
     }
 
-    private function priceToCents(mixed $price): int
-    {
-        return (int) round(((float) $price) * 100);
-    }
 }
