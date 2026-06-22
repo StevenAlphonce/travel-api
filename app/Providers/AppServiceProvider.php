@@ -2,13 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\PersonalAccessToken;
 use Illuminate\Support\ServiceProvider;
-use App\Models\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
-
     /**
      * Register any application services.
      */
@@ -16,9 +15,6 @@ class AppServiceProvider extends ServiceProvider
     {
         //
     }
-
-
-
 
     /**
      * Bootstrap any application services.

@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
 
         Travel::factory(30)->create();
         Tour::factory(60)->create();
-        Role::factory(2)->create();
+
+        $this->call(RoleSeeder::class);
     }
 }

@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 #[Signature('users:create')]
@@ -20,33 +21,40 @@ class CreateUserCommand extends Command
     {
         $user['name'] = $this->ask('Name of the new user?');
         $user['email'] = $this->ask('Email of the new user?');
-        $user['password']=$this->secret('Password of the new user?');
-        $roleName=$this->choice('Which role would you like to create?', ['admin', 'user',1]);
+        $user['password'] = $this->secret('Password of the new user?');
+        $user['password_confirmation'] = $this->secret('Confirm password?');
+        $roleName = $this->choice('Which role would you like to create?', ['admin', 'user']);
 
-        $role=Role::where('name',$roleName)->first();
-        if(!$role){
+        $role = Role::where('name', $roleName)->first();
+        if (! $role) {
             $this->error('Role not found');
-            return-1;
+
+            return self::FAILURE;
         }
 
-        $validate=validator($user,[
-            'name'=>'required|string|max:255',
-            'email'=>'required|string|email|max:255|unique:users',
-            'password'=>'required|string|min:8|confirmed',
+        $validation = validator($user, [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
         ]);
-        if($validate->fails()){
-            foreach($validate->errors()->all() as $error){
+        if ($validation->fails()) {
+            foreach ($validation->errors()->all() as $error) {
                 $this->error($error);
             }
-            return -1;
+
+            return self::FAILURE;
         }
-        DB::transaction(function () use($user,$role){
-            $user['password']=Hash::make($user['password']);
-            $newUser=User::create($user);
+
+        DB::transaction(function () use ($user, $role) {
+            unset($user['password_confirmation']);
+
+            $user['password'] = Hash::make($user['password']);
+            $newUser = User::create($user);
             $newUser->roles()->attach($role->id);
         });
 
-
         $this->info('User :'.$user['email'].' -created successfully.!');
+
+        return self::SUCCESS;
     }
 }
